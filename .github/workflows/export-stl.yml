@@ -1,0 +1,35 @@
+name: Export STL meshes
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Install OpenSCAD
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openscad
+
+      - name: Generate STL
+        run: |
+          mkdir -p mesh
+          openscad -o mesh/body.stl -D 'part="body"' model/drone_silhouette.scad
+          openscad -o mesh/accent.stl -D 'part="accent"' model/drone_silhouette.scad
+          test -s mesh/body.stl
+          test -s mesh/accent.stl
+
+      - name: Upload STL files
+        uses: actions/upload-artifact@v4
+        with:
+          name: quadcopter-stl
+          path: mesh/*.stl
+          retention-days: 30
